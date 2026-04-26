@@ -7,23 +7,24 @@ Deploy vibe_auth once, point any number of vibe_client apps at it. Users sign in
 ## How it works
 
 ```
-User → vibe_auth (sign in) → JWT issued
-     → vibe_client (dashboard) → JWT sent to Convex
+User → vibe_auth (sign in) → server-side relay fetches JWT
+     → redirect to vibe_client?_vibe_token=<jwt>
+     → JWT stored in localStorage → passed to Convex
      → Convex verifies JWT via JWKS → identity confirmed
 ```
 
 1. User clicks "Sign in" — redirected to your vibe_auth instance
-2. vibe_auth issues a signed JWT (Ed25519)
-3. vibe_client fetches the JWT and passes it to Convex via `ConvexProviderWithAuth`
-4. Convex verifies the JWT against vibe_auth's JWKS endpoint
-5. `ctx.auth.getUserIdentity()` returns the user's identity in any Convex function
+2. After sign-in, vibe_auth's server-side relay fetches a signed JWT and appends it to the redirect URL
+3. vibe_client reads `_vibe_token` from the URL on landing, stores it in localStorage
+4. `ConvexProviderWithAuth` passes the JWT to Convex on every request
+5. Convex verifies the JWT against vibe_auth's JWKS endpoint
+6. `ctx.auth.getUserIdentity()` returns the user's identity in any Convex function
 
 ## Stack
 
 - [Next.js 15](https://nextjs.org) — App Router, server components
 - [Convex](https://convex.dev) — real-time backend + database
-- [BetterAuth](https://better-auth.com) — auth client (session management)
-- [vibe_auth](https://github.com/gitcoder89431/vibe_auth) — self-hosted auth hub
+- [vibe_auth](https://github.com/gitcoder89431/vibe_auth) — self-hosted auth hub (JWT issuer)
 
 ## Quick start
 
@@ -97,7 +98,7 @@ src/
 │   ├── providers.tsx     # ConvexProviderWithAuth wired to vibe_auth
 │   └── layout.tsx
 ├── lib/
-│   └── auth.ts           # better-auth client
+│   └── auth.ts           # JWT utilities — token storage, session parsing, sign out
 convex/
 ├── auth.config.ts        # Points Convex to vibe_auth JWKS
 ├── schema.ts             # Users table
@@ -116,7 +117,6 @@ useEffect(() => {
     getOrCreate({
       email: session.user.email,
       name: session.user.name ?? undefined,
-      image: session.user.image ?? undefined,
     })
   }
 }, [session])
