@@ -2,34 +2,37 @@
 
 import { ConvexReactClient } from "convex/react"
 import { ConvexProviderWithAuth } from "convex/react"
-import { useCallback, useMemo } from "react"
-import { authClient } from "@/lib/auth"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { storeToken, getValidToken } from "@/lib/auth"
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 
 function useVibeAuth() {
-    const { data: session, isPending } = authClient.useSession()
+    const [isLoading, setIsLoading] = useState(true)
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search)
+        const urlToken = params.get("_vibe_token")
+
+        if (urlToken) {
+            storeToken(urlToken)
+            params.delete("_vibe_token")
+            const clean = window.location.pathname + (params.toString() ? "?" + params.toString() : "")
+            window.history.replaceState({}, "", clean)
+            setIsAuthenticated(true)
+        } else {
+            setIsAuthenticated(!!getValidToken())
+        }
+        setIsLoading(false)
+    }, [])
 
     const fetchAccessToken = useCallback(async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
-        if (!session) return null
-        try {
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/api/auth/token`,
-                { credentials: "include", cache: forceRefreshToken ? "no-store" : "default" }
-            )
-            if (!res.ok) return null
-            const { token } = await res.json()
-            return token ?? null
-        } catch {
-            return null
-        }
-    }, [session])
+        if (forceRefreshToken) return null
+        return getValidToken()
+    }, [])
 
-    return useMemo(() => ({
-        isLoading: isPending,
-        isAuthenticated: !!session,
-        fetchAccessToken,
-    }), [isPending, session, fetchAccessToken])
+    return useMemo(() => ({ isLoading, isAuthenticated, fetchAccessToken }), [isLoading, isAuthenticated, fetchAccessToken])
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {

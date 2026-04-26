@@ -1,30 +1,37 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useQuery } from "convex/react"
-import { authClient } from "@/lib/auth"
+import { getSession, signOut } from "@/lib/auth"
 import { api } from "../../../convex/_generated/api"
+
+type Session = ReturnType<typeof getSession>
 
 export default function DashboardPage() {
     const router = useRouter()
-    const { data: session, isPending } = authClient.useSession()
+    const [session, setSession] = useState<Session>(null)
+    const [isLoading, setIsLoading] = useState(true)
     const me = useQuery(api.users.me)
 
     useEffect(() => {
-        if (!isPending && !session) {
-            router.push(`${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/auth/sign-in?callbackURL=${encodeURIComponent(window.location.origin)}`)
+        const s = getSession()
+        setSession(s)
+        setIsLoading(false)
+        if (!s) {
+            const callbackURL = encodeURIComponent(window.location.origin)
+            router.push(`${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/auth/sign-in?callbackURL=${callbackURL}`)
         }
-    }, [session, isPending, router])
+    }, [router])
 
-    if (isPending || !session) return null
+    if (isLoading || !session) return null
 
     return (
         <main className="min-h-screen p-8 max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-2xl font-bold">Dashboard</h1>
                 <button
-                    onClick={() => authClient.signOut().then(() => router.push("/"))}
+                    onClick={async () => { await signOut(); router.push("/") }}
                     className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
                 >
                     Sign out

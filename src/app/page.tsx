@@ -1,12 +1,31 @@
 "use client"
 
 import Link from "next/link"
-import { authClient } from "@/lib/auth"
+import { useEffect, useState } from "react"
+import { getSession, signOut, storeToken } from "@/lib/auth"
+
+type Session = ReturnType<typeof getSession>
 
 export default function HomePage() {
-    const { data: session, isPending } = authClient.useSession()
+    const [session, setSession] = useState<Session>(null)
+    const [isLoading, setIsLoading] = useState(true)
 
-    if (isPending) return null
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search)
+        const urlToken = params.get("_vibe_token")
+        if (urlToken) {
+            storeToken(urlToken)
+            params.delete("_vibe_token")
+            const clean = window.location.pathname + (params.toString() ? "?" + params.toString() : "")
+            window.history.replaceState({}, "", clean)
+        }
+        setSession(getSession())
+        setIsLoading(false)
+    }, [])
+
+    if (isLoading) return null
+
+    const authUrl = process.env.NEXT_PUBLIC_VIBE_AUTH_URL
 
     return (
         <main className="min-h-screen flex flex-col items-center justify-center gap-6 p-8">
@@ -28,7 +47,7 @@ export default function HomePage() {
                             Go to dashboard
                         </Link>
                         <button
-                            onClick={() => authClient.signOut()}
+                            onClick={async () => { await signOut(); setSession(null) }}
                             className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors"
                         >
                             Sign out
@@ -37,7 +56,7 @@ export default function HomePage() {
                 </div>
             ) : (
                 <a
-                    href={`${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/auth/sign-in?callbackURL=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin : "")}`}
+                    href={`${authUrl}/auth/sign-in?callbackURL=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin : "")}`}
                     className="rounded-lg bg-black text-white px-6 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                     Sign in with VibeAuth
