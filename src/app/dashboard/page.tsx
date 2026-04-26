@@ -13,7 +13,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (!isPending && !session) {
-            router.push(`${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/auth/sign-in`)
+            router.push(`${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/auth/sign-in?callbackURL=${encodeURIComponent(window.location.origin)}`)
         }
     }, [session, isPending, router])
 
@@ -44,9 +44,9 @@ export default function DashboardPage() {
                     {me === undefined ? (
                         <p className="text-sm text-gray-400">Loading...</p>
                     ) : me === null ? (
-                        <p className="text-sm text-gray-400">No Convex record yet — call <code className="bg-gray-100 px-1 rounded">users.getOrCreate</code> on sign-in.</p>
+                        <p className="text-sm text-gray-400">No Convex record yet.</p>
                     ) : (
-                        <p className="text-sm font-mono text-gray-600">{JSON.stringify(me, null, 2)}</p>
+                        <pre className="text-xs font-mono text-gray-600 bg-gray-50 rounded p-2 overflow-auto">{JSON.stringify(me, null, 2)}</pre>
                     )}
                 </div>
             </div>

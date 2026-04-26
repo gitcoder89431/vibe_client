@@ -37,7 +37,7 @@ export default function HomePage() {
                 </div>
             ) : (
                 <a
-                    href={`${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/auth/sign-in`}
+                    href={`${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/auth/sign-in?callbackURL=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin : "")}`}
                     className="rounded-lg bg-black text-white px-6 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                     Sign in with VibeAuth

@@ -15,10 +15,7 @@ function useVibeAuth() {
         try {
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/api/auth/token`,
-                {
-                    credentials: "include",
-                    cache: forceRefreshToken ? "no-store" : "default",
-                }
+                { credentials: "include", cache: forceRefreshToken ? "no-store" : "default" }
             )
             if (!res.ok) return null
             const { token } = await res.json()
