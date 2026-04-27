@@ -19,8 +19,8 @@ export default function DashboardPage() {
         setSession(s)
         setIsLoading(false)
         if (!s) {
-            const callbackURL = encodeURIComponent(window.location.origin)
-            router.push(`${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/auth/sign-in?callbackURL=${callbackURL}`)
+            const redirect = encodeURIComponent(window.location.origin)
+            router.push(`${process.env.NEXT_PUBLIC_VIBE_AUTH_URL}/api/relay?redirect=${redirect}`)
         }
     }, [router])
 

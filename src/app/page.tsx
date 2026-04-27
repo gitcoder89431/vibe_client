@@ -56,7 +56,7 @@ export default function HomePage() {
                 </div>
             ) : (
                 <a
-                    href={`${authUrl}/auth/sign-in?callbackURL=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin : "")}`}
+                    href={`${authUrl}/api/relay?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin : "")}`}
                     className="rounded-lg bg-black text-white px-6 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                     Sign in with VibeAuth
