@@ -10,6 +10,8 @@
 
 **Live demo:** [vibe.ruixen.app](https://vibe.ruixen.app) · auth via [accounts.ruixen.app](https://accounts.ruixen.app)
 
+![vibe_client screenshot](screenshot.png)
+
 ---
 
 ## Requires
