@@ -124,6 +124,42 @@ useEffect(() => {
 
 After that, `ctx.auth.getUserIdentity().subject` in any Convex function is the user's vibe_auth user ID — use it to scope all data.
 
+## Building a new app from this template
+
+Clone this repo as your starting point. For each new project, only three things change:
+
+| Thing | Action |
+|---|---|
+| Convex project | Run `pnpm convex:dev` — new project, new `NEXT_PUBLIC_CONVEX_URL` |
+| `NEXT_PUBLIC_VIBE_AUTH_URL` | Always `https://accounts.ruixen.app` — never changes |
+| `VIBE_AUTH_URL` in Convex dashboard | Same as above |
+
+**These files copy as-is to every project — never touch them:**
+- `convex/auth.config.ts` — points Convex to vibe_auth JWKS, identical everywhere
+- `src/lib/auth.ts` — JWT utilities, identical everywhere
+- `src/app/providers.tsx` — ConvexProviderWithAuth setup, identical everywhere
+
+**Schema pattern — anchor everything to `vibeAuthId`:**
+
+The `sub` claim in the JWT is the vibe_auth user ID and is **consistent across all your apps** — the same user gets the same ID everywhere.
+
+```ts
+// convex/schema.ts
+defineTable({
+    vibeAuthId: v.string(),  // = ctx.auth.getUserIdentity().subject
+    email: v.string(),
+    // ...your app-specific fields
+}).index("by_vibeAuthId", ["vibeAuthId"])
+```
+
+```ts
+// any Convex query/mutation — look up the current user
+const identity = await ctx.auth.getUserIdentity()
+const user = await ctx.db.query("users")
+    .withIndex("by_vibeAuthId", q => q.eq("vibeAuthId", identity.subject))
+    .first()
+```
+
 ## Requires
 
 A running [vibe_auth](https://github.com/gitcoder89431/vibe_auth) instance. Deploy to Vercel in one click — see vibe_auth README.
